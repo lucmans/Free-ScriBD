@@ -1,10 +1,11 @@
 #!/bin/python3
 
 # TODO:
+#   - Fix phantomjs. Connection doesn't stay alive (set keep_alive of webdriver.remote).
 #   - Download book. Problem is, the book is defined in HTML and CSS and uses files which are stored on a Scribd server.
 #       Options:
 #         - Try to download all the files, images and fonts. Then use the Javascript from Scribd to view it.
-#         - Try to get the "made" pages (ask from DOM?) as image of pdf, or actually find a way to print it.
+#         - Try to get the "made" pages (ask from DOM?) as image of pdf, or actually find a way to print it (protected by site).
 #
 #       Tried:
 #         - Printing the page. This is prevented by the site.
@@ -30,7 +31,7 @@ elementsToRemove = ["page_missing_explanation outer_page only_ie6_border between
 
 unblur = [["pageParams.blur = true", "pageParams.blur = false"],
           ["outer_page only_ie6_border blurred_page", "outer_page only_ie6_border"],
-          ["unselectable=\"on\"", ""]]
+          ['unselectable="on"', ""]]
 
 
 def parseArgs(argv):
@@ -47,7 +48,7 @@ def parseArgs(argv):
         sys.exit()
 
 
-def removeElementByClass(className):
+def removeElementByClass(className, driver):
     driver.execute_script('''
         var element = document.getElementsByClassName("''' + className + '''"), i;
         for(i = element.length - 1; i >= 0; i--) {
@@ -55,33 +56,35 @@ def removeElementByClass(className):
         }
     ''')
 
-# TODO: Clean this messy code-block up.
-def startWebDriver():
-    global driver
 
-    try:
-        driver = webdriver.PhantomJS()
-    except Exception as e:
+# TODO: Fix phantomjs
+def startWebDriver():
+    webDrivers = [webdriver.Chrome, webdriver.Firefox, webdriver.Safari, webdriver.Edge, webdriver.Opera, webdriver.Ie]
+
+    for tryDriver in webDrivers:
         try:
-            print("Install PHantomJS for a headless experience.", file=sys.stderr)
-            driver = webdriver.Chrome()
+            driver = tryDriver()
         except Exception as e:
-            print("Install Chromium/Chrome or PHantomJS to use this hack (or change it in the script manually).", file=sys.stderr)
-            sys.exit()
+            pass
+        else:
+            return driver
+
+    print("No webdriver found.", file=sys.stderr)
 
 
 def main(argv):
     parseArgs(argv)
 
     # Download page.
-    startWebDriver()
+    driver = startWebDriver()
 
     driver.get(argv[0])
+
     driver.execute_script('document.title')
 
     # Remove adds, fix scaling on first page and some other minor things.
     for className in elementsToRemove:
-        removeElementByClass(className)
+        removeElementByClass(className, driver)
 
     page_source = str(driver.page_source)
     driver.quit();
