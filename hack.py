@@ -1,7 +1,6 @@
 #!/bin/python3
 
 # TODO:
-#   - Fix phantomjs. Connection doesn't stay alive (set keep_alive of webdriver.remote).
 #   - Download book. Problem is, the book is defined in HTML and CSS and uses files which are stored on a Scribd server.
 #       Options:
 #         - Try to download all the files, images and fonts. Then use the Javascript from Scribd to view it.
@@ -36,30 +35,36 @@ unblur = [["pageParams.blur = true", "pageParams.blur = false"],
 
 def parseArgs(argv):
     if(len(argv) != 1):
-        print("Incorrect usage.\nCorrect usage: ./hack.py [ULR | -h | --help] > [FILE.html]\nOnly works on \"scribd.com/doc/\" pages!\n\nInstall PHantomJS for a headless experience (sudo pacman -S phantomjs).", file=sys.stderr)
+        print("Incorrect usage.\n" + 
+              "Correct usage: ./hack.py [ULR | -h | --help] > [FILE.html]\n"
+              "Only works on \"scribd.com/doc/\" pages!\n\n"
+
+              "Install PHantomJS for a headless experience (sudo pacman -S phantomjs).", file=sys.stderr)
         sys.exit()
 
     if(argv[0] == "-h" or argv[0] == "--help"):
-        print("Downloads url's webpage, unblurs pages and prints HTML.\nOnly works on \"scribd.com/doc/\" pages!\nUsage: ./hack.py [ULR | -h | --help] > [FILE].html\n\nInstall PHantomJS for a headless experience (sudo pacman -S phantomjs).\n", file=sys.stderr)
+        print("Downloads url's webpage, unblurs pages and prints HTML.\n"
+              "Only works on \"scribd.com/doc/\" pages!\n"
+              "Usage: ./hack.py [ULR | -h | --help] > [FILE].html\n\n"
+
+              "Install PHantomJS for a headless experience (sudo pacman -S phantomjs).", file=sys.stderr)
         sys.exit()
 
     if("scribd.com/" not in argv[0]):
-        print("Url not from \"scribd.com/.\"\nUse -h or --help for help.", file=sys.stderr)
+        print("Url not from \"scribd.com/.\"\n" + 
+              "Use -h or --help for help.", file=sys.stderr)
         sys.exit()
 
 
 def removeElementByClass(className, driver):
-    driver.execute_script('''
-        var element = document.getElementsByClassName("''' + className + '''"), i;
-        for(i = element.length - 1; i >= 0; i--) {
-            element[i].parentNode.removeChild(element[i]);
-        }
-    ''')
+    driver.execute_script("        var element = document.getElementsByClassName(\"" + className + "\"), i;"
+                          "        for(i = element.length - 1; i >= 0; i--) {"
+                          "            element[i].parentNode.removeChild(element[i]);"
+                          "        }")
 
 
-# TODO: Fix phantomjs
 def startWebDriver():
-    webDrivers = [webdriver.Chrome, webdriver.Firefox, webdriver.Safari, webdriver.Edge, webdriver.Opera, webdriver.Ie]
+    webDrivers = [webdriver.PhantomJS, webdriver.Chrome, webdriver.Firefox, webdriver.Safari, webdriver.Edge, webdriver.Opera, webdriver.Ie]
 
     for tryDriver in webDrivers:
         try:
@@ -90,8 +95,8 @@ def main(argv):
     driver.quit();
 
     # The actual unblurring of the pages.
-    for i in unblur:
-        page_source = page_source.replace(i[0], i[1])
+    for page in unblur:
+        page_source = page_source.replace(page[0], page[1])
 
     print(page_source)
     print("\nDone!", file=sys.stderr)
