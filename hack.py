@@ -11,6 +11,7 @@
 #         - Only printing the class="document_container" element.
 #         - Copying the HTML, CSS and images and view it in a browser.
 #
+#   - Fix PhantomJS
 #   - Remove more unneeded elements from the page.
 #   - Start in fullscreen.
 
@@ -25,7 +26,7 @@ elementsToRemove = ["page_missing_explanation outer_page only_ie6_border between
                     "buy_doc_bar outer_page only_ie6_border between_page_module",
                     "newpage",  # All the correct pages get loaded from the scribd server. So remove all present pages (the first view which you can view for free).
                     "share_row",
-                    #"ratings_row",  # For some reason this messes resizing and fullscreen up.
+                    #"ratings_row",  # Started messing up resizing and fullscreen.
                     "autogen_class_views_pdfs_upvote autogen_class_widgets_base"]
 
 unblur = [["pageParams.blur = true", "pageParams.blur = false"],
@@ -39,7 +40,8 @@ def parseArgs(argv):
               "Correct usage: ./hack.py [ULR | -h | --help] > [FILE.html]\n"
               "Only works on \"scribd.com/doc/\" pages!\n\n"
 
-              "Install PHantomJS for a headless experience (sudo pacman -S phantomjs).", file=sys.stderr)
+              #"Install PHantomJS for a headless experience (sudo pacman -S phantomjs)."  # Phantom is broken
+              , file=sys.stderr)
         sys.exit()
 
     if(argv[0] == "-h" or argv[0] == "--help"):
@@ -47,7 +49,8 @@ def parseArgs(argv):
               "Only works on \"scribd.com/doc/\" pages!\n"
               "Usage: ./hack.py [ULR | -h | --help] > [FILE].html\n\n"
 
-              "Install PHantomJS for a headless experience (sudo pacman -S phantomjs).", file=sys.stderr)
+              #"Install PHantomJS for a headless experience (sudo pacman -S phantomjs)."
+              , file=sys.stderr)
         sys.exit()
 
     if("scribd.com/" not in argv[0]):
@@ -57,14 +60,15 @@ def parseArgs(argv):
 
 
 def removeElementByClass(className, driver):
-    driver.execute_script("        var element = document.getElementsByClassName(\"" + className + "\"), i;"
-                          "        for(i = element.length - 1; i >= 0; i--) {"
-                          "            element[i].parentNode.removeChild(element[i]);"
-                          "        }")
+    driver.execute_script("var element = document.getElementsByClassName(\"" + className + "\"), i;"
+                          "for(i = element.length - 1; i >= 0; i--) {"
+                          "    element[i].parentNode.removeChild(element[i]);"
+                          "}")
 
 
+# TODO: fix PhantomJS
 def startWebDriver():
-    webDrivers = [webdriver.PhantomJS, webdriver.Chrome, webdriver.Firefox, webdriver.Safari, webdriver.Edge, webdriver.Opera, webdriver.Ie]
+    webDrivers = [webdriver.Chrome, webdriver.Firefox, webdriver.Safari, webdriver.Edge, webdriver.Opera, webdriver.Ie]
 
     for tryDriver in webDrivers:
         try:
